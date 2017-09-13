@@ -32,16 +32,25 @@
 	<fx:Script>
 		<![CDATA[
 			import mx.core.FlexGlobals;
+			import mx.core.IVisualElement;
 			import mx.events.CloseEvent;
 			import mx.events.FlexEvent;
 			import mx.managers.PopUpManager;
 			
 			import spark.events.IndexChangeEvent;
+			import spark.primitives.Line;
 			
 			import actionScripts.events.GeneralEvent;
 			import actionScripts.events.GlobalEventDispatcher;
+			import actionScripts.plugin.actionscript.as3project.vo.BuildOptions;
 			import actionScripts.plugin.run.RunMobileSetting;
-			import actionScripts.plugin.settings.renderers.LinkButtonSkin;
+			import actionScripts.plugin.settings.vo.BooleanSetting;
+			import actionScripts.plugin.settings.vo.ISetting;
+			import actionScripts.plugin.settings.vo.MultiOptionSetting;
+			import actionScripts.plugin.settings.vo.NameValuePair;
+			import actionScripts.plugin.settings.vo.PathSetting;
+			import actionScripts.plugin.settings.vo.SettingsWrapper;
+			import actionScripts.plugin.settings.vo.StringSetting;
 			import actionScripts.valueObjects.ConstantsCoreVO;
 			
 			[Bindable] public var setting:RunMobileSetting;
@@ -57,23 +66,24 @@
 				cmbOption.setStyle("contentBackgroundColor","#FFFFFF");
 				cmbModelOption.setStyle("contentBackgroundColor","#FFFFFF");
 				
+				updateDevices(BuildOptions(setting.provider).targetPlatform);
+				
 				cmbModelOption.callLater(function():void
 				{
-					cmbOption.selectedIndex = setting.provider[setting.isSimulatorRun] ? 0 : 1;
-					if (setting.provider[setting.name] != "null")
+					cmbOption.selectedIndex = BuildOptions(setting.provider).isMobileRunOnSimulator ? 0 : 1;
+					if (BuildOptions(setting.provider).isMobileHasSimulatedDevice.name != "null")
 					{
 						for (var i:int=0; i < cmbModelOption.dataProvider.length; i++)
 						{
-							if (setting.provider[setting.name].name == cmbModelOption.dataProvider[i].name)
+							if (BuildOptions(setting.provider).isMobileHasSimulatedDevice.name == cmbModelOption.dataProvider[i].name)
 							{
 								cmbModelOption.selectedIndex = i;
+								lastSelectedItem = cmbModelOption.dataProvider[i];
 								break;
 							}
 						}
 					}
 				});
-				
-				updateDevices(setting.provider[setting.targetPlatform]);
 			}
 			
 			public function updateDevices(forPlatform:String):void
@@ -86,12 +96,57 @@
 					cmbModelOption.selectedIndex = 0;
 					lastSelectedItem = cmbModelOption.selectedItem;
 				});
+				
+				// generate content for device debugging
+				if (deviceContent && currentState == "device")
+				{
+					var deviceSettings:Vector.<ISetting>;
+					
+					if (isAndroidDevice)
+					{
+						deviceSettings = Vector.<ISetting>([
+							new BooleanSetting(setting.provider, "isBuildWithCaptive", "With Captive Runtime"),
+							new PathSetting(setting.provider, "certAndroid", "Certificate", false, setting.provider["certAndroid"], false),
+							new StringSetting(setting.provider, "certAndroidPassword", "Certificate Password")
+						]);
+					}
+					else
+					{
+						deviceSettings = Vector.<ISetting>([
+							new MultiOptionSetting(setting.provider, 'iosPackagingMode', "Packaging Mode", 
+								Vector.<NameValuePair>([
+									new NameValuePair("Standard", BuildOptions.IOS_PACKAGING_STANDARD),
+									new NameValuePair("Fast", BuildOptions.IOS_PACKAGING_FAST)
+								])
+							),
+							new PathSetting(setting.provider, "certIos", "Certificate", false, setting.provider["certIos"], false),
+							new StringSetting(setting.provider, "certIosPassword", "Certificate Password"),
+							new PathSetting(setting.provider, "certIosProvisioning", "Provisioning Profile", false, setting.provider["certIosProvisioning"], false)
+						]);
+					}
+					
+					deviceContent.removeAllElements();
+					
+					var line:Line;
+					var rdr:IVisualElement;
+					for each (var value:ISetting in deviceSettings)
+					{	
+						rdr = value.renderer;
+						deviceContent.addElement(rdr);
+						
+						line = new Line();
+						line.percentWidth = 100;
+						line.height = 1;
+						line.stroke = new SolidColorStroke(0xdadada);
+						deviceContent.addElement(line);
+					}
+				}
 			}
 			
 			protected function cmbOption_changeHandler(event:IndexChangeEvent):void
 			{
-				setting.provider[setting.isSimulatorRun] = (cmbOption.selectedIndex == 0);
-				setting.provider[setting.name] = cmbModelOption.selectedItem;
+				BuildOptions(setting.provider).isMobileRunOnSimulator = (cmbOption.selectedIndex == 0);
+				BuildOptions(setting.provider).isMobileHasSimulatedDevice = cmbModelOption.selectedItem;
 				
 				lastSelectedItem = cmbModelOption.selectedItem;
 				
@@ -164,66 +219,6 @@
 		</s:HGroup>
 		<s:Spacer height="3"/>
 	</s:VGroup>
-	<s:VGroup width="100%" includeIn="device" paddingBottom="12">
-		<s:HGroup width="100%" verticalAlign="middle"
-				  includeInLayout="{!isAndroidDevice}" visible="{!isAndroidDevice}">
-			<s:Label 
-				text="Packaging Method"
-				styleName="uiTextSettingsLabel" paddingTop="13"/>
-			<s:Spacer width="100%"/>
-			<s:RadioButton id="rbStandard" label="Standard" selected="true"
-						   groupName="rgMethods"/>
-			<s:RadioButton id="rbFast" label="Fast"
-						   groupName="rgMethods"/>
-		</s:HGroup>
-		<s:HGroup width="100%" verticalAlign="middle"
-				  includeInLayout="{isAndroidDevice}" visible="{isAndroidDevice}">
-			<s:Label 
-				text="Packaging Method"
-				styleName="uiTextSettingsLabel" paddingTop="13"/>
-			<s:Spacer width="100%"/>
-			<s:CheckBox id="cbCaptive" label="With Captive Runtime"/>
-		</s:HGroup>
-		<s:Rect width="100%"
-				alpha="1">
-			<s:stroke>
-				<s:SolidColorStroke weight="1" color="0xdadada"/>
-			</s:stroke>
-		</s:Rect>
-		<s:HGroup width="100%" paddingTop="15">
-			<s:Label styleName="uiTextSettingsLabel"
-					 text="Certificate" />
-			<mx:Spacer width="100%"/>
-			<s:Button label="Clear"
-					  skinClass="{LinkButtonSkin}"/>	
-			<s:Button label="Change"
-					  skinClass="{LinkButtonSkin}"/>
-		</s:HGroup>
-		<s:Label id="lblCert"
-				 styleName="uiTextSettingsValue"
-				 paddingTop="10" width="98%"
-				 text="C:\Windows\MyCertificate.p12"/>
-		<s:Rect width="100%"
-				alpha="1">
-			<s:stroke>
-				<s:SolidColorStroke weight="1" color="0xdadada"/>
-			</s:stroke>
-		</s:Rect>
-		<s:HGroup width="100%" height="100%"
-				  verticalAlign="middle" gap="0" paddingTop="15">
-			<s:Label styleName="uiTextSettingsLabel"
-					 text="Certificate Password"
-					 paddingTop="15"
-					 paddingBottom="15" paddingRight="50"/>
-			<s:TextInput id="lblCertPass"
-						 styleName="uiTextSettingsValue"
-						 height="100%" width="100%"
-						 textAlign="right"
-						 borderVisible="false"
-						 contentBackgroundAlpha="1"
-						 unfocusedTextSelectionColor="#a8c6ee"
-						 displayAsPassword="true" prompt="No Value"
-						 focusAlpha="0"/>
-		</s:HGroup>
-	</s:VGroup>
+	<s:VGroup id="deviceContent" 
+			  width="100%" includeIn="device" paddingBottom="12"/>
 </s:VGroup>

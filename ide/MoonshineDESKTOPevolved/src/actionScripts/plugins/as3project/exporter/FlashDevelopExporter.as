@@ -111,15 +111,15 @@ package actionScripts.plugins.as3project.exporter
 			if (p.isMobile) projType = AS3ProjectPlugin.AS3PROJ_AS_ANDROID;
 			
 			var platform:int = !p.air ? AS3ProjectPlugin.AS3PROJ_AS_WEB : AS3ProjectPlugin.AS3PROJ_AS_AIR;
-			if (p.isMobile) platform = (p.targetPlatform == "Android") ? AS3ProjectPlugin.AS3PROJ_AS_ANDROID : AS3ProjectPlugin.AS3PROJ_AS_IOS;
+			if (p.isMobile) platform = (p.buildOptions.targetPlatform == "Android") ? AS3ProjectPlugin.AS3PROJ_AS_ANDROID : AS3ProjectPlugin.AS3PROJ_AS_IOS;
 			
 			options = <moonshineRunCustomization />;
 			optionPairs = {
 				projectType		:	projType,
 				targetPlatform	:	platform,
 				urlToLaunch		:	p.htmlPath ? p.htmlPath.fileBridge.nativePath : "",
-				launchMethod	:	p.isMobileRunOnSimulator ? "Simulator" : "Device",
-				deviceSimulator	:	p.isMobileHasSimulatedDevice ? p.isMobileHasSimulatedDevice.name : null
+				launchMethod	:	p.buildOptions.isMobileRunOnSimulator ? "Simulator" : "Device",
+				deviceSimulator	:	p.buildOptions.isMobileHasSimulatedDevice ? p.buildOptions.isMobileHasSimulatedDevice.name : null
 			}
 			options.appendChild(UtilsCore.serializePairs(optionPairs, <option />));
 			project.appendChild(options);

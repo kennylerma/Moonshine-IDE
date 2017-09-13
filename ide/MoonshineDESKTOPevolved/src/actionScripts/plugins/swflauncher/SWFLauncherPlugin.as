@@ -172,22 +172,22 @@ package actionScripts.plugins.swflauncher
 			if (project.isMobile)
 			{
 				var device:MobileDeviceVO;
-				if (project.isMobileHasSimulatedDevice.name && !project.isMobileHasSimulatedDevice.key)
+				if (project.buildOptions.isMobileHasSimulatedDevice.name && !project.buildOptions.isMobileHasSimulatedDevice.key)
 				{
-					var deviceCollection:ArrayCollection = project.targetPlatform == "iOS" ? ConstantsCoreVO.TEMPLATES_IOS_DEVICES : ConstantsCoreVO.TEMPLATES_ANDROID_DEVICES;
+					var deviceCollection:ArrayCollection = project.buildOptions.targetPlatform == "iOS" ? ConstantsCoreVO.TEMPLATES_IOS_DEVICES : ConstantsCoreVO.TEMPLATES_ANDROID_DEVICES;
 					for (var i:int=0; i < deviceCollection.length; i++)
 					{
-						if (project.isMobileHasSimulatedDevice.name == deviceCollection[i].name)
+						if (project.buildOptions.isMobileHasSimulatedDevice.name == deviceCollection[i].name)
 						{
 							device = deviceCollection[i];
 							break;
 						}
 					}
 				}
-				else if (!project.isMobileHasSimulatedDevice.name)
+				else if (!project.buildOptions.isMobileHasSimulatedDevice.name)
 					device = ConstantsCoreVO.TEMPLATES_ANDROID_DEVICES[0];
 				else 
-					device = project.isMobileHasSimulatedDevice;
+					device = project.buildOptions.isMobileHasSimulatedDevice;
 				
 				// @note
 				// https://feathersui.com/help/faq/display-density.html

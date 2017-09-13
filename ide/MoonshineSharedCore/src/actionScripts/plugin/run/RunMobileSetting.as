@@ -34,24 +34,19 @@ package actionScripts.plugin.run
 		protected var copiedPaths:ArrayCollection;
 		
 		public var relativeRoot:FileLocation;
-		public var isSimulatorRun:String;
-		public var targetPlatform:String;
 		
 		private var rdr:RunMobileSettingRenderer;
 		
 		private var _project:AS3ProjectVO;
 		private var _visible:Boolean = true;
 		
-		public function RunMobileSetting(provider:Object, isSimulator:String, name:String, platform:String, label:String, 
+		public function RunMobileSetting(provider:Object, label:String, 
 										relativeRoot:FileLocation=null)
 		{
 			super();
 			this.provider = provider;
-			this.name = name;
 			this.label = label;
 			this.relativeRoot = relativeRoot;
-			this.isSimulatorRun = isSimulator;
-			this.targetPlatform = platform;
 			defaultValue = "";
 		}
 		

@@ -153,36 +153,6 @@ package actionScripts.plugin.actionscript.as3project.vo
 		
 		protected var configInvalid:Boolean = true;
 		
-		private var _targetPlatform:String;
-		public function set targetPlatform(value:String):void
-		{
-			_targetPlatform = value;
-		}
-		public function get targetPlatform():String
-		{
-			return _targetPlatform;
-		}
-		
-		private var _isMobileRunOnSimulator:Boolean = true;
-		public function set isMobileRunOnSimulator(value:Boolean):void
-		{
-			_isMobileRunOnSimulator = value;
-		}
-		public function get isMobileRunOnSimulator():Boolean
-		{
-			return _isMobileRunOnSimulator;
-		}
-		
-		private var _isMobileHasSimulatedDevice:MobileDeviceVO;
-		public function set isMobileHasSimulatedDevice(value:MobileDeviceVO):void
-		{
-			_isMobileHasSimulatedDevice = value;
-		}
-		public function get isMobileHasSimulatedDevice():MobileDeviceVO
-		{
-			return _isMobileHasSimulatedDevice;
-		}
-		
 		public function get platformTypes():ArrayCollection
 		{
 			var tmpCollection:ArrayCollection;
@@ -236,7 +206,7 @@ package actionScripts.plugin.actionscript.as3project.vo
 			if (mobileRunSettings) 
 			{
 				mobileRunSettings.updateDevices(targetPlatformSettings.stringValue);
-				isMobileHasSimulatedDevice = (!targetPlatformSettings.stringValue || targetPlatformSettings.stringValue == "Android") ? ConstantsCoreVO.TEMPLATES_ANDROID_DEVICES[0] : ConstantsCoreVO.TEMPLATES_IOS_DEVICES[0];
+				buildOptions.isMobileHasSimulatedDevice = (!targetPlatformSettings.stringValue || targetPlatformSettings.stringValue == "Android") ? ConstantsCoreVO.TEMPLATES_ANDROID_DEVICES[0] : ConstantsCoreVO.TEMPLATES_IOS_DEVICES[0];
 			}
 		}
 		
@@ -257,10 +227,10 @@ package actionScripts.plugin.actionscript.as3project.vo
 			
 			if (!additional) additional = new StringSetting(buildOptions, "additional", "Additional compiler options");
 			if (!htmlFilePath) htmlFilePath = new PathSetting(this, "getHTMLPath", "URL to Launch", false, getHTMLPath);
-			if (!mobileRunSettings) mobileRunSettings = new RunMobileSetting(this, "isMobileRunOnSimulator", "isMobileHasSimulatedDevice", "targetPlatform", "Launch Method");
+			if (!mobileRunSettings) mobileRunSettings = new RunMobileSetting(buildOptions, "Launch Method");
 			if (!targetPlatformSettings) 
 			{
-				targetPlatformSettings = new ListSetting(this, "targetPlatform", "Platform", platformTypes, "name");
+				targetPlatformSettings = new ListSetting(buildOptions, "targetPlatform", "Platform", platformTypes, "name");
 				targetPlatformSettings.addEventListener(Event.CHANGE, onTargetPlatformChanged, false, 0, true);
 			}
 			else if (!targetPlatformSettings.hasEventListener(Event.CHANGE))
@@ -380,7 +350,7 @@ package actionScripts.plugin.actionscript.as3project.vo
 					),
 					new SettingsWrapper("Run",
 						Vector.<ISetting>([
-							new ListSetting(this, "targetPlatform", "Platform", platformTypes, "name"),
+							new ListSetting(buildOptions, "targetPlatform", "Platform", platformTypes, "name"),
 							htmlFilePath,
 							additional,
 							mobileRunSettings
