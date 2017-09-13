@@ -27,11 +27,10 @@
   	paddingTop="15"
   	paddingBottom="5"
   	paddingLeft="15"
-  	paddingRight="15" xmlns:settings="actionScripts.plugin.actionscript.as3project.settings.*" initialize="onInitialized(event)" creationComplete="init()">
+  	paddingRight="15" xmlns:settings="actionScripts.plugin.actionscript.as3project.settings.*" creationComplete="init()">
 	
 	<fx:Script>
 		<![CDATA[
-			import mx.collections.ArrayCollection;
 			import mx.core.FlexGlobals;
 			import mx.events.CloseEvent;
 			import mx.events.FlexEvent;
@@ -42,9 +41,12 @@
 			import actionScripts.events.GeneralEvent;
 			import actionScripts.events.GlobalEventDispatcher;
 			import actionScripts.plugin.run.RunMobileSetting;
+			import actionScripts.plugin.settings.renderers.LinkButtonSkin;
 			import actionScripts.valueObjects.ConstantsCoreVO;
 			
 			[Bindable] public var setting:RunMobileSetting;
+			
+			[Bindable] private var isAndroidDevice:Boolean;
 			
 			private var deviceConfiguration:DeviceConfiguration;
 			private var lastSelectedItem:Object;
@@ -70,12 +72,15 @@
 						}
 					}
 				});
+				
+				updateDevices(setting.provider[setting.targetPlatform]);
 			}
 			
 			public function updateDevices(forPlatform:String):void
 			{
 				if (!forPlatform || forPlatform == "Android") cmbModelOption.dataProvider = ConstantsCoreVO.TEMPLATES_ANDROID_DEVICES;
 				else if (forPlatform == "iOS") cmbModelOption.dataProvider = ConstantsCoreVO.TEMPLATES_IOS_DEVICES;
+				isAndroidDevice = (forPlatform == "iOS") ? false : true;
 				cmbModelOption.callLater(function():void
 				{
 					cmbModelOption.selectedIndex = 0;
@@ -89,11 +94,8 @@
 				setting.provider[setting.name] = cmbModelOption.selectedItem;
 				
 				lastSelectedItem = cmbModelOption.selectedItem;
-			}
-			
-			protected function onInitialized(event:FlexEvent):void
-			{
-				updateDevices(setting.provider[setting.targetPlatform]);
+				
+				currentState = (cmbOption.selectedIndex == 0) ? "simulator" : "device";
 			}
 			
 			protected function onConfigureDevices(event:MouseEvent):void
@@ -101,7 +103,6 @@
 				if (!deviceConfiguration)
 				{
 					deviceConfiguration = PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject, DeviceConfiguration, true) as DeviceConfiguration;
-					//deviceConfiguration.devices = cmbModelOption.dataProvider as ArrayCollection;
 					deviceConfiguration.addEventListener(Event.CHANGE, onDeviceUpdated);
 					deviceConfiguration.addEventListener(CloseEvent.CLOSE, onConfigurationPopupClosed);
 					PopUpManager.centerPopUp(deviceConfiguration);
@@ -125,6 +126,10 @@
 			
 		]]>
 	</fx:Script>
+	<s:states>
+		<s:State name="simulator"/>
+		<s:State name="device"/>
+	</s:states>
 	
 	<s:Label 
 		text="{setting.label}"
@@ -146,15 +151,79 @@
 			<s:SolidColorStroke weight="1" color="0xdadada"/>
 		</s:stroke>
 	</s:Rect>
-	<s:Label 
-		text="Device Model"
-		styleName="uiTextSettingsLabel" paddingTop="13"/>
-	<s:HGroup width="100%" verticalAlign="middle">
-		<s:ComboBox id="cmbModelOption"
-					width="100%" alternatingItemColors="[#FFFFFF, #FFFFFF]" selectionColor="#cccccc" rollOverColor="#eeeeee"
-					selectedIndex="0" change="cmbOption_changeHandler(event)" labelField="name"/>
-		<s:Button label="Configure"
-				  click="onConfigureDevices(event)"/>
-	</s:HGroup>
-	<s:Spacer height="3"/>
+	<s:VGroup width="100%" includeIn="simulator">
+		<s:Label 
+			text="Device Model"
+			styleName="uiTextSettingsLabel" paddingTop="13"/>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:ComboBox id="cmbModelOption"
+						width="100%" alternatingItemColors="[#FFFFFF, #FFFFFF]" selectionColor="#cccccc" rollOverColor="#eeeeee"
+						selectedIndex="0" change="cmbOption_changeHandler(event)" labelField="name"/>
+			<s:Button label="Configure"
+					  click="onConfigureDevices(event)"/>
+		</s:HGroup>
+		<s:Spacer height="3"/>
+	</s:VGroup>
+	<s:VGroup width="100%" includeIn="device" paddingBottom="12">
+		<s:HGroup width="100%" verticalAlign="middle"
+				  includeInLayout="{!isAndroidDevice}" visible="{!isAndroidDevice}">
+			<s:Label 
+				text="Packaging Method"
+				styleName="uiTextSettingsLabel" paddingTop="13"/>
+			<s:Spacer width="100%"/>
+			<s:RadioButton id="rbStandard" label="Standard" selected="true"
+						   groupName="rgMethods"/>
+			<s:RadioButton id="rbFast" label="Fast"
+						   groupName="rgMethods"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle"
+				  includeInLayout="{isAndroidDevice}" visible="{isAndroidDevice}">
+			<s:Label 
+				text="Packaging Method"
+				styleName="uiTextSettingsLabel" paddingTop="13"/>
+			<s:Spacer width="100%"/>
+			<s:CheckBox id="cbCaptive" label="With Captive Runtime"/>
+		</s:HGroup>
+		<s:Rect width="100%"
+				alpha="1">
+			<s:stroke>
+				<s:SolidColorStroke weight="1" color="0xdadada"/>
+			</s:stroke>
+		</s:Rect>
+		<s:HGroup width="100%" paddingTop="15">
+			<s:Label styleName="uiTextSettingsLabel"
+					 text="Certificate" />
+			<mx:Spacer width="100%"/>
+			<s:Button label="Clear"
+					  skinClass="{LinkButtonSkin}"/>	
+			<s:Button label="Change"
+					  skinClass="{LinkButtonSkin}"/>
+		</s:HGroup>
+		<s:Label id="lblCert"
+				 styleName="uiTextSettingsValue"
+				 paddingTop="10" width="98%"
+				 text="C:\Windows\MyCertificate.p12"/>
+		<s:Rect width="100%"
+				alpha="1">
+			<s:stroke>
+				<s:SolidColorStroke weight="1" color="0xdadada"/>
+			</s:stroke>
+		</s:Rect>
+		<s:HGroup width="100%" height="100%"
+				  verticalAlign="middle" gap="0" paddingTop="15">
+			<s:Label styleName="uiTextSettingsLabel"
+					 text="Certificate Password"
+					 paddingTop="15"
+					 paddingBottom="15" paddingRight="50"/>
+			<s:TextInput id="lblCertPass"
+						 styleName="uiTextSettingsValue"
+						 height="100%" width="100%"
+						 textAlign="right"
+						 borderVisible="false"
+						 contentBackgroundAlpha="1"
+						 unfocusedTextSelectionColor="#a8c6ee"
+						 displayAsPassword="true" prompt="No Value"
+						 focusAlpha="0"/>
+		</s:HGroup>
+	</s:VGroup>
 </s:VGroup>
