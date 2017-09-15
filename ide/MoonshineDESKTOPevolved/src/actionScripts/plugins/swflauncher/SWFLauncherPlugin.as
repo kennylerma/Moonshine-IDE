@@ -54,6 +54,7 @@ package actionScripts.plugins.swflauncher
 		
 		private var customProcess:NativeProcess ;
 		private var currentAIRNamespaceVersion:String;
+		private var deviceLauncher:DeviceLauncher = new DeviceLauncher();
 		
 		override public function activate():void 
 		{
@@ -130,8 +131,11 @@ package actionScripts.plugins.swflauncher
 				customProcess.exit(true);
 				addRemoveShellListeners(false);
 				customProcess= null;
-				
 			}
+			
+			// Need project opened to run
+			if (!project) return;
+			
 			// Can't open files without an SDK set
 			if (!sdk && !project.buildOptions.customSDK)
 			{
@@ -145,30 +149,29 @@ package actionScripts.plugins.swflauncher
 				sdk = new File(event.value.toString());
 			}
 			
-			// Need project opened to run
-			if (!project) return;
-			
 			var currentSDK:File = (project.buildOptions.customSDK) ? project.buildOptions.customSDK.fileBridge.getFile as File : sdk;
+			var appXML:String = findAndCopyApplicationDescriptor(file, project, file.parent);
+			
+			// In case of mobile project and device-run, lets divert
+			if (project.isMobile && !project.buildOptions.isMobileRunOnSimulator)
+			{
+				deviceLauncher.runOnDevice(project, sdk, file, appXML);
+				return;
+			}
 			
 			var customInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
-			
 			var executableFile:File;
+
 			if( Settings.os == "win")
 				executableFile = currentSDK.resolvePath("bin/adl.exe");
 			else
 				executableFile = currentSDK.resolvePath("bin/adl");
-			//	customInfo.executable = executable;
+			customInfo.executable = executableFile;
 			
 			// Find air debug launcher
 			print("Launch Applcation");
 			
-			var appXML:String = findAndCopyApplicationDescriptor(file, project, file.parent);
-			
-			//var executableFile: File = new File("C:\\Program Files\\Adobe\\Adobe Flash Builder 4.6\\sdks\\4.14\\bin\\adl.exe");
-			customInfo.executable = executableFile;
-			var processArgs:Vector.<String> = new Vector.<String>;               
-			
-			var isFlashDevelopProject: Boolean = (project.projectFile && project.projectFile.fileBridge.nativePath.indexOf(".as3proj") != -1) ? true : false;
+			var processArgs:Vector.<String> = new Vector.<String>;
 			if (project.isMobile)
 			{
 				var device:MobileDeviceVO;

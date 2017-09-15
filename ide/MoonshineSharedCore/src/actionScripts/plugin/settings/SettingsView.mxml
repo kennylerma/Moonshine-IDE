@@ -38,6 +38,7 @@
 			import mx.collections.ArrayCollection;
 			import mx.controls.Alert;
 			import mx.core.IVisualElement;
+			import mx.core.ScrollPolicy;
 			import mx.graphics.SolidColorStroke;
 			
 			import spark.components.Button;
@@ -487,14 +488,14 @@
 		<mx:Canvas id="settingsWrapper" 
 			top="0" bottom="42" 
 			width="100%"
-			minWidth="450">
+			minWidth="450" horizontalScrollPolicy="off">
 			
 			<s:VGroup id="settingsContent"
 				width="100%"	
 				gap="0"
 				paddingLeft="20"
 				paddingRight="20"
-				paddingTop="20" />
+				paddingTop="20"/>
 		</mx:Canvas>		
 			
 		

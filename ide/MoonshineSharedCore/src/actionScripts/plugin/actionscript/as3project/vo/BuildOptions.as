@@ -61,12 +61,11 @@ package actionScripts.plugin.actionscript.as3project.vo
 		public var isCleanRequiresBeforeBuild:Boolean;
 		public var deviceBuildCertificate:FileLocation;
 		public var deviceBuildCertificatePassword:String;
-		public var isBuildWithCaptive:Boolean;
-		public var certAndroid:FileLocation;
+		public var certAndroid:String;
 		public var certAndroidPassword:String;
-		public var certIos:FileLocation;
+		public var certIos:String;
 		public var certIosPassword:String;
-		public var certIosProvisioning:FileLocation;
+		public var certIosProvisioning:String;
 		public var iosPackagingMode:String = IOS_PACKAGING_STANDARD;
 		
 		private var _targetPlatform:String;

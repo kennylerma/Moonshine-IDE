@@ -72,6 +72,11 @@ package actionScripts.plugin.run
 			return rdr;
 		}
 		
+		override public function commitChanges():void
+		{
+			if (rdr) rdr.commitChanges();
+		}
+		
 		public function set visible(value:Boolean):void
 		{
 			_visible = value;
@@ -105,7 +110,7 @@ package actionScripts.plugin.run
 				if (tmpFL.fileBridge.isDirectory
 					&& lbl.charAt(lbl.length-1) != "/")
 				{
-					lbl += "/";	
+					lbl += "/";
 				}
 			}
 			
