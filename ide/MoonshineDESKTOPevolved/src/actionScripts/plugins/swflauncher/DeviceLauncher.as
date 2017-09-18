@@ -30,6 +30,7 @@ package actionScripts.plugins.swflauncher
 	import actionScripts.events.GlobalEventDispatcher;
 	import actionScripts.factory.FileLocation;
 	import actionScripts.plugin.actionscript.as3project.vo.AS3ProjectVO;
+	import actionScripts.plugin.actionscript.as3project.vo.BuildOptions;
 	import actionScripts.plugin.console.ConsoleOutputter;
 	import actionScripts.plugin.core.compiler.CompilerEventBase;
 	import actionScripts.valueObjects.Settings;
@@ -69,13 +70,31 @@ package actionScripts.plugins.swflauncher
 			
 			addToQueue({com:"set FLEX_HOME="+ sdk.nativePath, showInConsole:false});
 			
-			if (isAndroid)
+			var adtPackagingCom:String;
+			if (isAndroid) 
 			{
-				addToQueue({com:"adt -package -target apk -storetype pkcs12 -keystore "+ project.buildOptions.certAndroid +" "+ project.name +".apk" +" "+ descriptorPathModified[descriptorPathModified.length-1] +" "+ swf.name, showInConsole:true});
-				addToQueue({com:project.buildOptions.certAndroidPassword, showInConsole:false});
-				addToQueue({com:"adt -installApp -platform android -package "+ project.name +".apk", showInConsole:true});
-				addToQueue({com:"adt -launchApp -platform android -appid "+ appID, showInConsole:true});
+				adtPackagingCom = 'adt -package -target apk -storetype pkcs12 -keystore "'+ project.buildOptions.certAndroid +'" '+ project.name +'.apk' +' '+ descriptorPathModified[descriptorPathModified.length-1] +' '+ swf.name;
 			}
+			else
+			{
+				var packagingMode:String = (runAsDebugger) ? "ipa-debug-interpreter" : ((project.buildOptions.iosPackagingMode == BuildOptions.IOS_PACKAGING_STANDARD) ? "ipa-test" : "ipa-test-interpreter");
+				adtPackagingCom = 'adt -package -target '+ packagingMode +' -storetype pkcs12 -keystore "'+ project.buildOptions.certIos +'" -provisioning-profile "'+ project.buildOptions.certIosProvisioning +'" '+ project.name +'.ipa' +' '+ descriptorPathModified[descriptorPathModified.length-1] +' '+ swf.name;
+			}
+			
+			// extensions and resources
+			if (project.nativeExtensions && project.nativeExtensions.length > 0) adtPackagingCom+= ' -extdir "'+ project.nativeExtensions[0].fileBridge.nativePath +'"';
+			if (project.resourcePaths)
+			{
+				for each (var i:FileLocation in project.resourcePaths)
+				{
+					adtPackagingCom += ' "'+ i.fileBridge.nativePath +'"';
+				}
+			}
+			
+			addToQueue({com:adtPackagingCom, showInConsole:true});
+			addToQueue({com:project.buildOptions.certAndroidPassword, showInConsole:false});
+			addToQueue({com:"adt -installApp -platform "+ (isAndroid ? "android" : "ios") +" -package "+ project.name +(isAndroid ? ".apk" : ".ipa"), showInConsole:true});
+			addToQueue({com:"adt -launchApp -platform "+ (isAndroid ? "android" : "ios") +" -appid "+ appID, showInConsole:true});
 			
 			if (customProcess) startShell(false);
 			startShell(true);

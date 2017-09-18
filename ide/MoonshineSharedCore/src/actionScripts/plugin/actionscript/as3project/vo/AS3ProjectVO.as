@@ -271,7 +271,7 @@ package actionScripts.plugin.actionscript.as3project.vo
 							new PathListSetting(this, "resourcePaths", "Resource folders", folderLocation, false),
 							new PathListSetting(this, "externalLibraries", "External libraries", folderLocation, true, false),
 							new PathListSetting(this, "libraries", "Libraries", folderLocation),
-							new PathListSetting(this, "nativeExtensions", "Native extensions", folderLocation, true, false)
+							new PathListSetting(this, "nativeExtensions", "Native extensions folder", folderLocation, false, true)
 						])
 					),
 					new SettingsWrapper("Warnings & Errors",

@@ -44,7 +44,6 @@
 			import actionScripts.events.GlobalEventDispatcher;
 			import actionScripts.plugin.actionscript.as3project.vo.BuildOptions;
 			import actionScripts.plugin.run.RunMobileSetting;
-			import actionScripts.plugin.settings.vo.BooleanSetting;
 			import actionScripts.plugin.settings.vo.ISetting;
 			import actionScripts.plugin.settings.vo.MultiOptionSetting;
 			import actionScripts.plugin.settings.vo.NameValuePair;
@@ -62,14 +61,12 @@
 			
 			private function init():void
 			{
-				cmbOption.setStyle("contentBackgroundColor","#FFFFFF");
-				
+				cmbOption.selectedIndex = BuildOptions(setting.provider).isMobileRunOnSimulator ? 0 : 1;
 				updateDevices(BuildOptions(setting.provider).targetPlatform);
 				setting.stringValue = "nil";
 				
 				cmbModelOption.callLater(function():void
 				{
-					cmbOption.selectedIndex = BuildOptions(setting.provider).isMobileRunOnSimulator ? 0 : 1;
 					if (BuildOptions(setting.provider).isMobileHasSimulatedDevice.name != "null")
 					{
 						for (var i:int=0; i < cmbModelOption.dataProvider.length; i++)
@@ -87,6 +84,8 @@
 			
 			public function updateDevices(forPlatform:String):void
 			{
+				currentState = (cmbOption.selectedIndex == 0) ? "simulator" : "device";
+				
 				if (!forPlatform || forPlatform == "Android") cmbModelOption.dataProvider = ConstantsCoreVO.TEMPLATES_ANDROID_DEVICES;
 				else if (forPlatform == "iOS") cmbModelOption.dataProvider = ConstantsCoreVO.TEMPLATES_IOS_DEVICES;
 				isAndroidDevice = (forPlatform == "iOS") ? false : true;
@@ -165,8 +164,7 @@
 				BuildOptions(setting.provider).isMobileHasSimulatedDevice = cmbModelOption.selectedItem;
 				
 				lastSelectedItem = cmbModelOption.selectedItem;
-				
-				currentState = (cmbOption.selectedIndex == 0) ? "simulator" : "device";
+				updateDevices(isAndroidDevice ? "Android" : "iOS");
 			}
 			
 			protected function onConfigureDevices(event:MouseEvent):void
