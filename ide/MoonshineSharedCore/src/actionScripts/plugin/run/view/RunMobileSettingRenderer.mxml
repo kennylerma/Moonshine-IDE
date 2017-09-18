@@ -62,9 +62,7 @@
 			
 			private function init():void
 			{
-				cmbOption.textInput.editable = cmbModelOption.textInput.editable = false;
 				cmbOption.setStyle("contentBackgroundColor","#FFFFFF");
-				cmbModelOption.setStyle("contentBackgroundColor","#FFFFFF");
 				
 				updateDevices(BuildOptions(setting.provider).targetPlatform);
 				setting.stringValue = "nil";
@@ -94,7 +92,6 @@
 				isAndroidDevice = (forPlatform == "iOS") ? false : true;
 				cmbModelOption.callLater(function():void
 				{
-					cmbModelOption.selectedIndex = 0;
 					lastSelectedItem = cmbModelOption.selectedItem;
 				});
 				
@@ -193,7 +190,6 @@
 			private function onDeviceUpdated(event:Event):void
 			{
 				if (cmbModelOption.dataProvider.getItemIndex(lastSelectedItem) != -1) cmbModelOption.selectedItem = lastSelectedItem;
-				else cmbModelOption.selectedIndex = 0;
 				
 				GlobalEventDispatcher.getInstance().dispatchEvent(new GeneralEvent(GeneralEvent.DEVICE_UPDATED));
 			}
@@ -208,16 +204,20 @@
 	<s:Label 
 		text="{setting.label}"
 		styleName="uiTextSettingsLabel"/>
-	<s:ComboBox id="cmbOption"
+	<s:DropDownList id="cmbOption"
+					width="100%" height="24" 
+					change="cmbOption_changeHandler(event)" 
+					requireSelection="true">
+	<!--<s:ComboBox id="cmbOption"
 				width="100%" alternatingItemColors="[#FFFFFF, #FFFFFF]" selectionColor="#cccccc" rollOverColor="#eeeeee"
-				selectedIndex="0" change="cmbOption_changeHandler(event)">
+				selectedIndex="0" change="cmbOption_changeHandler(event)">-->
 		<s:dataProvider>
 			<s:ArrayList>
 				<fx:String>AIR Simulator</fx:String>
 				<fx:String>Device</fx:String>
 			</s:ArrayList>
 		</s:dataProvider>
-	</s:ComboBox>
+	</s:DropDownList>
 	<s:Spacer height="3"/>
 	<s:Rect width="100%"
 			alpha="1">
@@ -230,9 +230,10 @@
 			text="Device Model"
 			styleName="uiTextSettingsLabel" paddingTop="13"/>
 		<s:HGroup width="100%" verticalAlign="middle">
-			<s:ComboBox id="cmbModelOption"
-						width="100%" alternatingItemColors="[#FFFFFF, #FFFFFF]" selectionColor="#cccccc" rollOverColor="#eeeeee"
-						selectedIndex="0" change="cmbOption_changeHandler(event)" labelField="name"/>
+			<s:DropDownList id="cmbModelOption"
+							width="100%" height="24" 
+							change="cmbOption_changeHandler(event)" labelField="name" 
+							requireSelection="true"/>
 			<s:Button label="Configure"
 					  click="onConfigureDevices(event)"/>
 		</s:HGroup>

@@ -28,6 +28,7 @@ package actionScripts.plugins.swflauncher
 	import flash.utils.IDataOutput;
 	
 	import actionScripts.events.GlobalEventDispatcher;
+	import actionScripts.factory.FileLocation;
 	import actionScripts.plugin.actionscript.as3project.vo.AS3ProjectVO;
 	import actionScripts.plugin.console.ConsoleOutputter;
 	import actionScripts.plugin.core.compiler.CompilerEventBase;
@@ -50,6 +51,13 @@ package actionScripts.plugins.swflauncher
 			isAndroid = (project.buildOptions.targetPlatform == "Android");
 			isRunAsDebugger = runAsDebugger;
 			
+			// We need the application ID; without pre-guessing any
+			// lets read and find it
+			var descriptorFile:FileLocation = project.folderLocation.fileBridge.resolvePath(descriptorPath);
+			var descriptorXML:XML = new XML(descriptorFile.fileBridge.read());
+			var xmlns:Namespace = new Namespace(descriptorXML.namespace());
+			var appID:String = descriptorXML.xmlns::id;
+			
 			var descriptorPathModified:Array = descriptorPath.split(File.separator);
 			
 			// STEP 1
@@ -60,11 +68,17 @@ package actionScripts.plugins.swflauncher
 			customInfo.workingDirectory = swf.parent;
 			
 			addToQueue({com:"set FLEX_HOME="+ sdk.nativePath, showInConsole:false});
-			addToQueue({com:"adt -package -target apk -storetype pkcs12 -keystore "+ project.buildOptions.certAndroid +" -storepass "+ project.buildOptions.certAndroidPassword +" "+ project.name +".apk" +" "+ descriptorPathModified[descriptorPathModified.length-1] +" "+ swf.name, showInConsole:true});
-			addToQueue({com:"adt -installApp -platform android -package "+ project.name +".apk", showInConsole:true});
 			
+			if (isAndroid)
+			{
+				addToQueue({com:"adt -package -target apk -storetype pkcs12 -keystore "+ project.buildOptions.certAndroid +" "+ project.name +".apk" +" "+ descriptorPathModified[descriptorPathModified.length-1] +" "+ swf.name, showInConsole:true});
+				addToQueue({com:project.buildOptions.certAndroidPassword, showInConsole:false});
+				addToQueue({com:"adt -installApp -platform android -package "+ project.name +".apk", showInConsole:true});
+				addToQueue({com:"adt -launchApp -platform android -appid "+ appID, showInConsole:true});
+			}
+			
+			if (customProcess) startShell(false);
 			startShell(true);
-			
 			flush();
 		}
 		
@@ -163,20 +177,31 @@ package actionScripts.plugins.swflauncher
 			var data:String = output.readUTFBytes(output.bytesAvailable);
 			var match:Array;
 			
-			match = data.match(/set FLEX_HOME/);
+			data = data.toLowerCase();
+			
+			match = data.match(/set flex_home/);
 			if (match)
 			{
 				flush();
 				return;
 			}
 			
-			match = data.match(/The application has been packaged with a shared runtime/);
+			match = data.match(/password/);
+			if (match)
+			{
+				flush();
+				return;
+			}
+			
+			match = data.match(/the application has been packaged with a shared runtime/);
 			if (match) 
 			{
 				print("NOTE: The application has been packaged with a shared runtime.");
 				flush();
 				return;
 			}
+			
+			flush();
 		}
 	}
 }

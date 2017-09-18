@@ -170,10 +170,13 @@ package actionScripts.plugins.as3project.importer
 			var html:String = UtilsCore.deserializeString(data.moonshineRunCustomization.option.@urlToLaunch);
 			if (html) p.htmlPath = new FileLocation(html);
 			
-			p.buildOptions.isMobileHasSimulatedDevice = new MobileDeviceVO(UtilsCore.deserializeString(data.moonshineRunCustomization.option.@deviceSimulator));
-			
 			var simulator:String = UtilsCore.deserializeString(data.moonshineRunCustomization.option.@launchMethod);
 			p.buildOptions.isMobileRunOnSimulator = (simulator != "Device") ? true : false;
+			
+			p.buildOptions.isMobileHasSimulatedDevice = new MobileDeviceVO(UtilsCore.deserializeString(data.moonshineRunCustomization.deviceSimulator));
+			p.buildOptions.certAndroid = UtilsCore.deserializeString(data.moonshineRunCustomization.certAndroid);
+			p.buildOptions.certIos = UtilsCore.deserializeString(data.moonshineRunCustomization.certIos);
+			p.buildOptions.certIosProvisioning = UtilsCore.deserializeString(data.moonshineRunCustomization.certIosProvisioning);
 
 			return p;
 		}
